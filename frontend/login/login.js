@@ -4,9 +4,6 @@ const registerButton = document.getElementById('register-submit');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 
-// API endpoint
-const API_URL = 'http://localhost:5000';
-
 // Function to handle API responses
 const handleResponse = async (response) => {
     const data = await response.json();
@@ -19,7 +16,8 @@ const handleResponse = async (response) => {
 // Login function
 const handleLogin = async () => {
     try {
-        const response = await fetch(`${API_URL}/login`, {
+        const backendUrl = await window.config.getBackendUrl();
+        const response = await fetch(`${backendUrl}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -46,7 +44,8 @@ const handleLogin = async () => {
 // Register function
 const handleRegister = async () => {
     try {
-        const response = await fetch(`${API_URL}/register`, {
+        const backendUrl = await window.config.getBackendUrl();
+        const response = await fetch(`${backendUrl}/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,24 +1,32 @@
 #!/bin/bash
 
+# Read configuration from config.json
+FRONTEND_PORT=$(jq -r '.frontend.port' config.json)
+BACKEND_PORT=$(jq -r '.backend.port' config.json)
+FRONTEND_DOMAIN=$(jq -r '.frontend.domain' config.json)
+BACKEND_DOMAIN=$(jq -r '.backend.domain' config.json)
+FRONTEND_PROTOCOL=$(jq -r '.frontend.protocol' config.json)
+BACKEND_PROTOCOL=$(jq -r '.backend.protocol' config.json)
+
 echo "🚀 Starting servers..."
 
 # Start backend
-echo "Starting backend server on port 5000..."
-(cd backend && deno run --allow-net --allow-read=./ main.ts 5000) &
+echo "Starting backend server on port $BACKEND_PORT..."
+(cd backend && deno run --allow-net --allow-read=../ main.ts $BACKEND_PORT) &
 BACKEND_PID=$!
 
 # Start frontend  
-echo "Starting frontend server on port 8080..."
-(cd frontend && deno run --allow-net --allow-read=./ server.ts 8080) &
+echo "Starting frontend server on port $FRONTEND_PORT..."
+(cd frontend && deno run --allow-net --allow-read=../ server.ts $FRONTEND_PORT) &
 FRONTEND_PID=$!
 
-# firefox http://localhost:8080 &
-# firefox http://localhost:5000 &
-
+# Open browsers
+firefox $FRONTEND_PROTOCOL://$FRONTEND_DOMAIN:$FRONTEND_PORT &
+firefox $BACKEND_PROTOCOL://$BACKEND_DOMAIN:$BACKEND_PORT &
 
 echo "✅ Both servers running:"
-echo "  Backend PID: $BACKEND_PID (http://localhost:5000)"
-echo "  Frontend PID: $FRONTEND_PID (http://localhost:8080)"
+echo "  Backend PID: $BACKEND_PID ($BACKEND_PROTOCOL://$BACKEND_DOMAIN:$BACKEND_PORT)"
+echo "  Frontend PID: $FRONTEND_PID ($FRONTEND_PROTOCOL://$FRONTEND_DOMAIN:$FRONTEND_PORT)"
 echo ""
 echo "Press Ctrl+C to stop..."
 

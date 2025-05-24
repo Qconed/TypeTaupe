@@ -3,6 +3,19 @@ import { Application, Router, send } from "https://deno.land/x/oak@v12.6.1/mod.t
 const app = new Application();
 const ROOT = `${Deno.cwd()}/`;
 
+// Read configuration
+const config = JSON.parse(await Deno.readTextFile('../config.json'));
+
+// Serve config.json
+app.use(async (ctx, next) => {
+  if (ctx.request.url.pathname === '/config.json') {
+    ctx.response.headers.set('Content-Type', 'application/json');
+    ctx.response.body = config;
+    return;
+  }
+  await next();
+});
+
 app.use(async (ctx, next) => {
   try {
     await send(ctx, ctx.request.url.pathname, {

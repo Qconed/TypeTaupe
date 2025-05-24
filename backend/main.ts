@@ -35,11 +35,14 @@ interface TokenInfo {
 
 const tokens: { [key: string]: TokenInfo } = {};
 
+// Read configuration
+const config = JSON.parse(await Deno.readTextFile('../config.json'));
+
 const app = new Application();
 
 app.use(
   oakCors({
-    origin: ["http://localhost:8080"],
+    origin: [`${config.frontend.protocol}://${config.frontend.domain}:${config.frontend.port}`],
     credentials: true,
   }),
 );
@@ -169,7 +172,7 @@ setInterval(() => {
       delete tokens[token];
     }
   });
-}, 100000); // Check every second
+}, 1000); // Check every second
 
 // Verify endpoint
 router.post("/verify", async (ctx) => {
