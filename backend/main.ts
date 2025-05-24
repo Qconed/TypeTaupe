@@ -28,8 +28,12 @@ const secretKey = await crypto.subtle.generateKey(
   ["sign", "verify"]
 );
 
-const tokens: { [key: string]: string } = {};
+interface TokenInfo {
+  username: string;
+  expiresAt: number;
+}
 
+const tokens: { [key: string]: TokenInfo } = {};
 
 const app = new Application();
 
@@ -105,11 +109,84 @@ router.post("/login", async (ctx) => {
       secretKey
     );
 
+    // Store token with expiration (5 seconds from now)
+    const expiresAt = Date.now() + 5000; // 5 seconds
+    tokens[token] = {
+      username: user.username,
+      expiresAt: expiresAt
+    };
+
     ctx.response.status = 200;
     ctx.response.body = { 
       message: "Login successful",
-      token: token 
+      auth_token: token 
     };
+  } catch (error) {
+    ctx.response.status = 400;
+    ctx.response.body = { error: "Invalid request data" };
+  }
+});
+
+const is_authorized = async (auth_token: string) => {
+  if (!auth_token) {
+    console.log("missing token");
+    return false;
+  }
+
+  const tokenInfo = tokens[auth_token];
+  if (!tokenInfo) {
+    console.log("token not found");
+    return false;
+  }
+
+  // Check if token has expired
+  if (Date.now() > tokenInfo.expiresAt) {
+    console.log("token expired");
+    delete tokens[auth_token]; // Remove expired token
+    return false;
+  }
+
+  try {
+    const payload = await verify(auth_token, secretKey);
+    if (payload.username === tokenInfo.username) {
+      return true;
+    }
+  } catch {
+    console.log("token invalid");
+    delete tokens[auth_token]; // Remove invalid token
+    return false;
+  }
+
+  console.log("incorrect token");
+  return false;
+};
+
+// Add a cleanup function to remove expired tokens periodically
+setInterval(() => {
+  const now = Date.now();
+  Object.entries(tokens).forEach(([token, info]) => {
+    if (now > info.expiresAt) {
+      delete tokens[token];
+    }
+  });
+}, 100000); // Check every second
+
+// Verify endpoint
+router.post("/verify", async (ctx) => {
+  try {
+    const body = await ctx.request.body.json();
+    const { auth_token } = body;
+
+    const isAuthorized = await is_authorized(auth_token);
+    
+    if (!isAuthorized) {
+      ctx.response.status = 401;
+      ctx.response.body = { error: "Unauthorized" };
+      return;
+    }
+
+    ctx.response.status = 200;
+    ctx.response.body = { message: "Token valid" };
   } catch (error) {
     ctx.response.status = 400;
     ctx.response.body = { error: "Invalid request data" };

@@ -12,8 +12,8 @@ echo "Starting frontend server on port 8080..."
 (cd frontend && deno run --allow-net --allow-read=./ server.ts 8080) &
 FRONTEND_PID=$!
 
-firefox http://localhost:8080 &
-firefox http://localhost:5000 &
+# firefox http://localhost:8080 &
+# firefox http://localhost:5000 &
 
 
 echo "✅ Both servers running:"
