@@ -216,5 +216,32 @@ router.get("/get/connected-users", async (ctx) => {
   }
 });
 
+// Logout endpoint
+router.post("/logout", async (ctx) => {
+  try {
+    const body = await ctx.request.body.json();
+    const { auth_token } = body;
+
+    if (!auth_token) {
+      ctx.response.status = 400;
+      ctx.response.body = { error: "No token provided" };
+      return;
+    }
+
+    // Remove the token if it exists
+    if (tokens[auth_token]) {
+      delete tokens[auth_token];
+      ctx.response.status = 200;
+      ctx.response.body = { message: "Logout successful" };
+    } else {
+      ctx.response.status = 404;
+      ctx.response.body = { error: "Token not found" };
+    }
+  } catch (error) {
+    ctx.response.status = 400;
+    ctx.response.body = { error: "Invalid request data" };
+  }
+});
+
 console.log(`Server running on http://localhost:${port}`);
 await app.listen({ port });
