@@ -5,22 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Typing Practice</title>
     <link rel="stylesheet" href="practice.css">
+    <link rel="stylesheet" href="../header/header.css">
 </head>
 <body>
+    <div id="header-container"></div>
     <div class="practice-container">
+        <div class="stats">
+            <p>Speed: <span id="speed">0</span> WPM</p>
+            <p>Errors: <span id="errors">0</span></p>
+        </div>
         <div class="text-ribbon">
             <span id="text-content"></span>
         </div>
         <div class="input-area">
             <input type="text" id="user-input" autocomplete="off" placeholder="Start typing...">
         </div>
-        <div class="stats">
-            <p>Speed: <span id="speed">0</span> WPM</p>
-            <p>Errors: <span id="errors">0</span></p>
+        <div class="keyboard-container">
+            <div id="keyboard"></div>
         </div>
     </div>
 
     <script src="../config.js"></script>
+    <script src="../header/header.js"></script>
+    <script src="../header/loadHeader.js"></script>
     <script src="practice.js"></script>
 </body>
 </html> 
