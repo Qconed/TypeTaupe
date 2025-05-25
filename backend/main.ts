@@ -112,8 +112,8 @@ router.post("/login", async (ctx) => {
       secretKey
     );
 
-    // Store token with expiration (5 seconds from now)
-    const expiresAt = Date.now() + 5000; // 5 seconds
+    // Store token with expiration (1 hour from now)
+    const expiresAt = Date.now() + 3600000; // 1 hour
     tokens[token] = {
       username: user.username,
       expiresAt: expiresAt
@@ -193,6 +193,26 @@ router.post("/verify", async (ctx) => {
   } catch (error) {
     ctx.response.status = 400;
     ctx.response.body = { error: "Invalid request data" };
+  }
+});
+
+// Get connected users endpoint
+router.get("/get/connected-users", async (ctx) => {
+  try {
+    const now = Date.now();
+    // Filter out expired tokens and get unique usernames
+    const activeUsers = new Set(
+      Object.entries(tokens)
+        .filter(([_, info]) => now <= info.expiresAt)
+        .map(([_, info]) => info.username)
+    );
+    
+    const usersList = Array.from(activeUsers).map(username => ({ name: username }));
+    ctx.response.status = 200;
+    ctx.response.body = { users: usersList };
+  } catch (error) {
+    ctx.response.status = 500;
+    ctx.response.body = { error: "Internal server error" };
   }
 });
 
