@@ -293,5 +293,145 @@ router.get("/get/textline/:lineNumber", async (ctx) => {
     }
 });
 
+// WebSocket challenge rooms
+interface ChallengeRoom {
+    players: Map<string, WebSocket>;
+    text: string;
+    isGameStarted: boolean;
+}
+
+const challengeRooms = new Map<string, ChallengeRoom>();
+
+// Function to get a random text line
+async function getRandomTextLine(): Promise<string> {
+    const lines = await Deno.readTextFile("./lines.txt");
+    const textLines = lines.split("\n").filter(line => line.trim());
+    const randomIndex = Math.floor(Math.random() * textLines.length);
+    return textLines[randomIndex];
+}
+
+// WebSocket handler for challenges
+app.use(async (ctx) => {
+    if (ctx.request.url.pathname === "/ws/challenge") {
+        const ws = await ctx.upgrade();
+        const auth_token = ctx.request.url.searchParams.get("auth_token");
+        
+        if (!auth_token) {
+            ws.close(1008, "No auth token provided");
+            return;
+        }
+
+        const isAuthorized = await is_authorized(auth_token);
+        if (!isAuthorized) {
+            ws.close(1008, "Unauthorized");
+            return;
+        }
+
+        const username = tokens[auth_token].username;
+        let currentRoom: ChallengeRoom | null = null;
+
+        // Find an available room or create a new one
+        for (const [roomId, room] of challengeRooms.entries()) {
+            if (room.players.size < 2 && !room.isGameStarted) {
+                currentRoom = room;
+                room.players.set(username, ws);
+                break;
+            }
+        }
+
+        if (!currentRoom) {
+            // Create a new room
+            const roomId = crypto.randomUUID();
+            currentRoom = {
+                players: new Map([[username, ws]]),
+                text: await getRandomTextLine(),
+                isGameStarted: false
+            };
+            challengeRooms.set(roomId, currentRoom);
+        }
+
+        // Handle WebSocket messages
+        ws.onmessage = async (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                switch (data.type) {
+                    case "join":
+                        // Notify other player that someone joined
+                        for (const [playerName, playerWs] of currentRoom!.players.entries()) {
+                            if (playerName !== username) {
+                                playerWs.send(JSON.stringify({
+                                    type: "opponent_joined"
+                                }));
+                            }
+                        }
+
+                        // If we have 2 players, start the game
+                        if (currentRoom!.players.size === 2) {
+                            for (const [_, playerWs] of currentRoom!.players.entries()) {
+                                playerWs.send(JSON.stringify({
+                                    type: "game_start",
+                                    text: currentRoom!.text
+                                }));
+                            }
+                            currentRoom!.isGameStarted = true;
+                        }
+                        break;
+
+                    case "progress":
+                        // Forward progress to opponent
+                        for (const [playerName, playerWs] of currentRoom!.players.entries()) {
+                            if (playerName !== username) {
+                                playerWs.send(JSON.stringify({
+                                    type: "opponent_progress",
+                                    progress: data.progress
+                                }));
+                            }
+                        }
+                        break;
+
+                    case "complete":
+                        // Notify all players that the game is over
+                        for (const [playerName, playerWs] of currentRoom!.players.entries()) {
+                            playerWs.send(JSON.stringify({
+                                type: "game_over",
+                                winner: username,
+                                wpm: data.wpm,
+                                errors: data.errors
+                            }));
+                        }
+                        break;
+                }
+            } catch (error) {
+                console.error("Error handling WebSocket message:", error);
+            }
+        };
+
+        // Handle WebSocket close
+        ws.onclose = () => {
+            if (currentRoom) {
+                currentRoom.players.delete(username);
+                
+                // If room is empty, remove it
+                if (currentRoom.players.size === 0) {
+                    for (const [roomId, room] of challengeRooms.entries()) {
+                        if (room === currentRoom) {
+                            challengeRooms.delete(roomId);
+                            break;
+                        }
+                    }
+                } else {
+                    // Notify remaining player that opponent left
+                    for (const [_, playerWs] of currentRoom.players.entries()) {
+                        playerWs.send(JSON.stringify({
+                            type: "opponent_left"
+                        }));
+                    }
+                }
+            }
+        };
+    }
+});
+
 console.log(`Server running on http://localhost:${port}`);
 await app.listen({ port });

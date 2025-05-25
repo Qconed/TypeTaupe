@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Challenge</title>
+    <link rel="stylesheet" href="challenge.css">
+    <link rel="stylesheet" href="../header/header.css">
+</head>
+<body>
+    <div id="header-container"></div>
+    <div class="challenge-container">
+        <div class="challenge-info">
+            <h2>Typing Challenge</h2>
+            <p>Race against another player to complete the text first!</p>
+            <div id="opponent-status">Waiting for opponent...</div>
+            <div class="progress-container">
+                <div class="player-progress">
+                    <div class="player-label">You</div>
+                    <div class="progress-bar">
+                        <div id="player-progress" class="progress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="player-progress">
+                    <div class="player-label">Opponent</div>
+                    <div class="progress-bar">
+                        <div id="opponent-progress" class="progress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="stats">
+            <p>Speed: <span id="speed">0</span> WPM</p>
+            <p>Errors: <span id="errors">0</span></p>
+        </div>
+        <div class="text-ribbon">
+            <span id="text-content"></span>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" autocomplete="off" placeholder="Start typing when both players are ready...">
+        </div>
+        <div class="keyboard-container">
+            <div id="keyboard"></div>
+        </div>
+    </div>
+
+    <script src="../config.js"></script>
+    <script src="../header/header.js"></script>
+    <script src="../header/loadHeader.js"></script>
+    <script src="challenge.js"></script>
+</body>
+</html> 

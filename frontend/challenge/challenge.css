@@ -1,0 +1,164 @@
+.challenge-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.challenge-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.challenge-info h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+#opponent-status {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.progress-container {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.player-progress {
+    margin: 10px 0;
+}
+
+.player-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background-color: #007bff;
+    transition: width 0.3s ease;
+}
+
+#player-progress {
+    background-color: #28a745;
+}
+
+#opponent-progress {
+    background-color: #dc3545;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.text-ribbon {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#text-content {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+#text-content span {
+    margin-right: 5px;
+}
+
+#text-content .correct {
+    color: #28a745;
+}
+
+.input-area {
+    margin-bottom: 20px;
+}
+
+#user-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.2em;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+#user-input:focus {
+    border-color: #007bff;
+}
+
+#user-input.error {
+    border-color: #dc3545;
+    animation: shake 0.5s;
+}
+
+.keyboard-container {
+    margin-top: 20px;
+}
+
+#keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 5px;
+}
+
+.key {
+    width: 40px;
+    height: 40px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    cursor: default;
+    user-select: none;
+}
+
+.key.special {
+    width: 60px;
+    background-color: #e9ecef;
+}
+
+.key.space {
+    width: 200px;
+}
+
+.key.active {
+    background-color: #007bff;
+    color: white;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+} 
