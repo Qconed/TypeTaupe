@@ -13,7 +13,8 @@ async function initializeDatabase() {
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         victories INTEGER DEFAULT 0,
-        last_login INTEGER DEFAULT 0
+        last_login INTEGER DEFAULT 0,
+        admin BOOLEAN DEFAULT 0
       );
     `);
 
@@ -36,11 +37,11 @@ async function initializeDatabase() {
 }
 
 // User operations
-async function createUser(username: string, passwordHash: string) {
+async function createUser(username: string, passwordHash: string, isAdmin: boolean = false) {
   try {
     const result = db.query<[number]>(
-      "INSERT INTO users (username, password_hash, last_login) VALUES (?, ?, ?) RETURNING id",
-      [username, passwordHash, Date.now()]
+      "INSERT INTO users (username, password_hash, last_login, admin) VALUES (?, ?, ?, ?) RETURNING id",
+      [username, passwordHash, Date.now(), isAdmin ? 1 : 0]
     );
     return { id: result[0][0] };
   } catch (error) {
@@ -52,7 +53,7 @@ async function createUser(username: string, passwordHash: string) {
 }
 
 async function getUserByUsername(username: string) {
-  const result = db.query<[number, string, string, number, number]>(
+  const result = db.query<[number, string, string, number, number, number]>(
     "SELECT * FROM users WHERE username = ?",
     [username]
   );
@@ -62,7 +63,8 @@ async function getUserByUsername(username: string) {
     username: result[0][1],
     password_hash: result[0][2],
     victories: result[0][3],
-    last_login: result[0][4]
+    last_login: result[0][4],
+    admin: Boolean(result[0][5])
   };
 }
 
@@ -199,6 +201,15 @@ async function cleanupExpiredTokens() {
   db.execute("DELETE FROM tokens WHERE expires_at <= ?", [Date.now()]);
 }
 
+// Add new function to check if user is admin
+async function isUserAdmin(username: string) {
+  const result = db.query<[number]>(
+    "SELECT admin FROM users WHERE username = ?",
+    [username]
+  );
+  return result.length > 0 && Boolean(result[0][0]);
+}
+
 // Export functions and db
 export {
   db,
@@ -212,5 +223,6 @@ export {
   getAllActiveTokens,
   deleteToken,
   cleanupExpiredTokens,
-  updateLastLogin
+  updateLastLogin,
+  isUserAdmin
 }; 

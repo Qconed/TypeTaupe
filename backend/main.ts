@@ -12,7 +12,8 @@ import {
   hasActiveToken,
   getAllActiveTokens,
   deleteToken,
-  cleanupExpiredTokens
+  cleanupExpiredTokens,
+  isUserAdmin
 } from "./db.ts";
 
 if (Deno.args.length < 1) {
@@ -475,6 +476,124 @@ app.use(async (ctx) => {
             }
         };
     }
+});
+
+// Admin middleware
+const is_admin = async (auth_token: string) => {
+  if (!auth_token) return false;
+  
+  try {
+    const tokenInfo = await getTokenInfo(auth_token);
+    if (!tokenInfo) return false;
+    
+    return await isUserAdmin(tokenInfo.username);
+  } catch (error) {
+    console.error("Admin check error:", error);
+    return false;
+  }
+};
+
+// Get all text lines endpoint (admin only)
+router.get("/admin/textlines", async (ctx) => {
+  try {
+    const auth_token = ctx.request.headers.get("Authorization")?.split(" ")[1];
+    
+    if (!auth_token || !(await is_admin(auth_token))) {
+      ctx.response.status = 403;
+      ctx.response.body = { error: "Unauthorized" };
+      return;
+    }
+
+    const lines = (await Deno.readTextFile('./lines.txt')).split('\n').filter(line => line.trim());
+    ctx.response.status = 200;
+    ctx.response.body = { lines };
+  } catch (error) {
+    console.error("Error reading text lines:", error);
+    ctx.response.status = 500;
+    ctx.response.body = { error: "Internal server error" };
+  }
+});
+
+// Add new text line endpoint (admin only)
+router.post("/admin/textlines", async (ctx) => {
+  try {
+    const auth_token = ctx.request.headers.get("Authorization")?.split(" ")[1];
+    
+    if (!auth_token || !(await is_admin(auth_token))) {
+      ctx.response.status = 403;
+      ctx.response.body = { error: "Unauthorized" };
+      return;
+    }
+
+    const body = await ctx.request.body.json();
+    const { text } = body;
+
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+      ctx.response.status = 400;
+      ctx.response.body = { error: "Invalid text" };
+      return;
+    }
+
+    // Read current content
+    const currentContent = await Deno.readTextFile('./lines.txt');
+    const lines = currentContent.split('\n').filter(line => line.trim());
+    
+    // Add new line
+    lines.push(text.trim());
+    
+    // Write back to file
+    await Deno.writeTextFile('./lines.txt', lines.join('\n') + '\n');
+    
+    ctx.response.status = 200;
+    ctx.response.body = { message: "Text line added successfully" };
+  } catch (error) {
+    console.error("Error adding text line:", error);
+    ctx.response.status = 500;
+    ctx.response.body = { error: "Internal server error" };
+  }
+});
+
+// Delete text line endpoint (admin only)
+router.delete("/admin/textlines/:index", async (ctx) => {
+  try {
+    const auth_token = ctx.request.headers.get("Authorization")?.split(" ")[1];
+    
+    if (!auth_token || !(await is_admin(auth_token))) {
+      ctx.response.status = 403;
+      ctx.response.body = { error: "Unauthorized" };
+      return;
+    }
+
+    const index = parseInt(ctx.params.index);
+    if (isNaN(index) || index < 0) {
+      ctx.response.status = 400;
+      ctx.response.body = { error: "Invalid line index" };
+      return;
+    }
+
+    // Read current content
+    const currentContent = await Deno.readTextFile('./lines.txt');
+    const lines = currentContent.split('\n').filter(line => line.trim());
+    
+    if (index >= lines.length) {
+      ctx.response.status = 404;
+      ctx.response.body = { error: "Line not found" };
+      return;
+    }
+
+    // Remove the line
+    lines.splice(index, 1);
+    
+    // Write back to file
+    await Deno.writeTextFile('./lines.txt', lines.join('\n') + '\n');
+    
+    ctx.response.status = 200;
+    ctx.response.body = { message: "Text line deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting text line:", error);
+    ctx.response.status = 500;
+    ctx.response.body = { error: "Internal server error" };
+  }
 });
 
 console.log(`Server running on http://localhost:${port}`);

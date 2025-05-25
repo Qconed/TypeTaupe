@@ -62,4 +62,50 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         displayConnectedUsers();
     }, 2000); // in milliseconds
-}); 
+});
+
+// Check if user is admin
+async function checkIfAdmin() {
+    const auth_token = localStorage.getItem('auth_token');
+    if (!auth_token) return false;
+
+    try {
+        const backendUrl = await window.config.getBackendUrl();
+        const response = await fetch(`${backendUrl}/admin/textlines`, {
+            headers: {
+                'Authorization': `Bearer ${auth_token}`
+            }
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+    }
+}
+
+// Add admin features to the page
+async function addAdminFeatures() {
+    const isAdmin = await checkIfAdmin();
+    if (isAdmin) {
+        const adminLink = document.createElement('a');
+        adminLink.href = '/addtext/index.html';
+        adminLink.className = 'admin-link';
+        adminLink.textContent = 'Manage Practice Text';
+        
+        // Add the link to the appropriate container
+        const container = document.querySelector('.container');
+        if (container) {
+            container.appendChild(adminLink);
+        }
+    }
+}
+
+// Initialize page
+async function initializePage() {
+    await checkAuth();
+    await addAdminFeatures();
+}
+
+// Start initialization when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializePage); 
