@@ -31,16 +31,30 @@ async function handleLogout() {
     }
 }
 
-// Wait for the header to be loaded before adding the event listener
-function initializeLogoutButton() {
+// Function to handle website name click
+function handleWebsiteNameClick() {
+    window.location.href = '/home/index.html';
+}
+
+// Wait for the header to be loaded before adding the event listeners
+function initializeHeader() {
     const logoutButton = document.getElementById('logout-button');
+    const websiteName = document.querySelector('.website-name');
+    
     if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
-    } else {
-        // If the button isn't found, try again after a short delay
-        setTimeout(initializeLogoutButton, 100);
+    }
+    
+    if (websiteName) {
+        websiteName.addEventListener('click', handleWebsiteNameClick);
+        websiteName.style.cursor = 'pointer'; // Add pointer cursor to indicate clickability
+    }
+    
+    // If elements aren't found, try again after a short delay
+    if (!logoutButton || !websiteName) {
+        setTimeout(initializeHeader, 100);
     }
 }
 
 // Start the initialization process
-initializeLogoutButton();
+initializeHeader();
