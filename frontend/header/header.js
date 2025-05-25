@@ -1,5 +1,3 @@
-const logoutButton = document.getElementById('logout-button');
-
 async function handleLogout() {
     alert("logout");
     try {
@@ -33,4 +31,16 @@ async function handleLogout() {
     }
 }
 
-logoutButton.addEventListener('click', handleLogout);
+// Wait for the header to be loaded before adding the event listener
+function initializeLogoutButton() {
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+    } else {
+        // If the button isn't found, try again after a short delay
+        setTimeout(initializeLogoutButton, 100);
+    }
+}
+
+// Start the initialization process
+initializeLogoutButton();
