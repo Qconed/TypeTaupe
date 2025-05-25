@@ -10,6 +10,14 @@
 .website-name {
     font-size: 1.5rem;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-logo {
+    height: 2rem;
+    width: auto;
 }
 
 .logout-button {
