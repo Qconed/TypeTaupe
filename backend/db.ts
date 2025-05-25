@@ -1,7 +1,7 @@
 import { DB } from "https://deno.land/x/sqlite@v3.8/mod.ts";
 
 // Create database connection
-const db = new DB("dino_game.db");
+const db = new DB("taupe.db");
 
 // Initialize database tables
 async function initializeDatabase() {
@@ -12,7 +12,8 @@ async function initializeDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        victories INTEGER DEFAULT 0
+        victories INTEGER DEFAULT 0,
+        last_login INTEGER DEFAULT 0
       );
     `);
 
@@ -38,8 +39,8 @@ async function initializeDatabase() {
 async function createUser(username: string, passwordHash: string) {
   try {
     const result = db.query<[number]>(
-      "INSERT INTO users (username, password_hash) VALUES (?, ?) RETURNING id",
-      [username, passwordHash]
+      "INSERT INTO users (username, password_hash, last_login) VALUES (?, ?, ?) RETURNING id",
+      [username, passwordHash, Date.now()]
     );
     return { id: result[0][0] };
   } catch (error) {
@@ -51,7 +52,7 @@ async function createUser(username: string, passwordHash: string) {
 }
 
 async function getUserByUsername(username: string) {
-  const result = db.query<[number, string, string, number]>(
+  const result = db.query<[number, string, string, number, number]>(
     "SELECT * FROM users WHERE username = ?",
     [username]
   );
@@ -60,7 +61,8 @@ async function getUserByUsername(username: string) {
     id: result[0][0],
     username: result[0][1],
     password_hash: result[0][2],
-    victories: result[0][3]
+    victories: result[0][3],
+    last_login: result[0][4]
   };
 }
 
@@ -69,6 +71,15 @@ async function incrementVictories(username: string) {
     "UPDATE users SET victories = victories + 1 WHERE username = ?",
     [username]
   );
+}
+
+async function updateLastLogin(username: string) {
+  const timestamp = Date.now();
+  db.execute(
+    "UPDATE users SET last_login = ? WHERE username = ?",
+    [timestamp, username]
+  );
+  return timestamp;
 }
 
 // Token operations
@@ -90,13 +101,16 @@ async function createToken(token: string, username: string, expiresAt: Date) {
       throw new Error("Token cannot be empty");
     }
 
+    // Update last login timestamp
+    const lastLogin = await updateLastLogin(username);
+
     const result = db.query(
       "INSERT INTO tokens (token, username, expires_at) VALUES (?, ?, ?)",
       [tokenStr, username, expiresAt.getTime()]
     );
 
     console.log("Token created successfully");
-    return result;
+    return { result, lastLogin };
   } catch (error) {
     console.error("Error creating token:", {
       name: error.name,
@@ -109,7 +123,7 @@ async function createToken(token: string, username: string, expiresAt: Date) {
 
 async function getTokenInfo(token: string) {
   const result = db.query<[number, string, string, number]>(
-    "SELECT * FROM tokens WHERE token = ? AND expires_at > ?",
+    "SELECT t.*, u.last_login FROM tokens t JOIN users u ON t.username = u.username WHERE t.token = ? AND t.expires_at > ?",
     [token, Date.now()]
   );
   if (result.length === 0) return null;
@@ -117,7 +131,8 @@ async function getTokenInfo(token: string) {
     id: result[0][0],
     token: result[0][1],
     username: result[0][2],
-    expires_at: result[0][3]
+    expires_at: result[0][3],
+    last_login: result[0][4]
   };
 }
 
@@ -157,6 +172,11 @@ async function deleteToken(token: string) {
       return;
     }
 
+    console.log("Found token to delete:", {
+      username: existingToken.username,
+      expires_at: new Date(existingToken.expires_at).toISOString()
+    });
+
     // Delete the token
     const result = db.query(
       "DELETE FROM tokens WHERE token = ?",
@@ -191,5 +211,6 @@ export {
   hasActiveToken,
   getAllActiveTokens,
   deleteToken,
-  cleanupExpiredTokens
+  cleanupExpiredTokens,
+  updateLastLogin
 }; 

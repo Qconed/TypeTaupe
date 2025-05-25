@@ -190,5 +190,43 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Initialize keyboard and start practice
-createKeyboard();
-startNewPractice(); 
+async function initializePractice() {
+    try {
+        // Check if user is authorized
+        const auth_token = localStorage.getItem('auth_token');
+        if (!auth_token) {
+            window.location.href = '/login/index.html';
+            return;
+        }
+
+        // Verify token with backend
+        const backendUrl = await window.config.getBackendUrl();
+        const response = await fetch(`${backendUrl}/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ auth_token })
+        });
+
+        if (!response.ok) {
+            // If token is invalid, redirect to login
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('last_login');
+            window.location.href = '/login/index.html';
+            return;
+        }
+
+        // If we get here, token is valid - initialize the practice page
+        createKeyboard();
+        startNewPractice();
+    } catch (error) {
+        console.error('Error initializing practice page:', error);
+        // On error, redirect to login to be safe
+        window.location.href = '/login/index.html';
+    }
+}
+
+// Start initialization
+initializePractice(); 

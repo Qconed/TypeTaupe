@@ -113,9 +113,13 @@ router.post("/login", async (ctx) => {
     // Check if user is already logged in
     const isLoggedIn = await hasActiveToken(username);
     if (isLoggedIn) {
-      ctx.response.status = 409; // Conflict
-      ctx.response.body = { error: "User is already logged in" };
-      return;
+      // Delete all existing tokens for this user
+      const activeTokens = await getAllActiveTokens();
+      for (const token of activeTokens) {
+        if (token.username === username) {
+          await deleteToken(token.token);
+        }
+      }
     }
 
     // Verify password
@@ -126,10 +130,13 @@ router.post("/login", async (ctx) => {
       return;
     }
 
-    // Generate JWT token
+    // Generate JWT token with last_login timestamp
     const token = await create(
       { alg: "HS512", typ: "JWT" },
-      { username: user.username },
+      { 
+        username: user.username,
+        last_login: Date.now()
+      },
       secretKey
     );
 
@@ -141,12 +148,13 @@ router.post("/login", async (ctx) => {
 
     // Store token with expiration (1 hour from now)
     const expiresAt = new Date(Date.now() + 3600000); // 1 hour
-    await createToken(token, username, expiresAt);
+    const { lastLogin } = await createToken(token, username, expiresAt);
 
     ctx.response.status = 200;
     ctx.response.body = { 
       message: "Login successful",
-      auth_token: token 
+      auth_token: token,
+      last_login: lastLogin
     };
   } catch (error) {
     console.error("Login error details:", {
@@ -179,6 +187,13 @@ const is_authorized = async (auth_token: string) => {
     // Verify the username matches
     if (payload.username !== tokenInfo.username) {
       console.log("token username mismatch");
+      await deleteToken(auth_token);
+      return false;
+    }
+
+    // Check if this is the most recent login
+    if (payload.last_login < tokenInfo.last_login) {
+      console.log("token is from an older login session");
       await deleteToken(auth_token);
       return false;
     }
@@ -258,7 +273,22 @@ router.post("/logout", async (ctx) => {
       return;
     }
 
-    // Remove the token if it exists
+    // Verify the token first
+    const isAuthorized = await is_authorized(auth_token);
+    if (!isAuthorized) {
+      console.log("Token verification failed during logout");
+      ctx.response.status = 401;
+      ctx.response.body = { error: "Invalid token" };
+      return;
+    }
+
+    // Get token info for logging
+    const tokenInfo = await getTokenInfo(auth_token);
+    if (tokenInfo) {
+      console.log("Logging out user:", tokenInfo.username);
+    }
+
+    // Remove the token
     try {
       await deleteToken(auth_token);
       console.log("Token successfully deleted during logout");

@@ -42,7 +42,9 @@ function initializeHeader() {
     const websiteName = document.querySelector('.website-name');
     
     if (logoutButton) {
-        logoutButton.addEventListener('click', handleLogout);
+        logoutButton.addEventListener('click', () => {
+            window.handleLogout();
+        });
     }
     
     if (websiteName) {
