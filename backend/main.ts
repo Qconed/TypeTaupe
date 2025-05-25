@@ -9,6 +9,7 @@ import {
   incrementVictories,
   createToken,
   getTokenInfo,
+  hasActiveToken,
   getAllActiveTokens,
   deleteToken,
   cleanupExpiredTokens
@@ -26,9 +27,13 @@ await initializeDatabase();
 
 const router = new Router();
 
-const secretKey = await crypto.subtle.generateKey(
+// Create a consistent secret key for JWT
+const encoder = new TextEncoder();
+const secretKey = await crypto.subtle.importKey(
+  "raw",
+  encoder.encode("your-secret-key-here"),
   { name: "HMAC", hash: "SHA-512" },
-  true,
+  false,
   ["sign", "verify"]
 );
 
@@ -88,6 +93,8 @@ router.post("/login", async (ctx) => {
     const body = await ctx.request.body.json();
     const { username, password } = body;
 
+    console.log("Login attempt for username:", username);
+
     // Check for empty username or password
     if (!username || !password || username.trim() === "" || password.trim() === "") {
       ctx.response.status = 400;
@@ -104,8 +111,8 @@ router.post("/login", async (ctx) => {
     }
 
     // Check if user is already logged in
-    const existingToken = await getTokenInfo(username);
-    if (existingToken) {
+    const isLoggedIn = await hasActiveToken(username);
+    if (isLoggedIn) {
       ctx.response.status = 409; // Conflict
       ctx.response.body = { error: "User is already logged in" };
       return;
@@ -126,6 +133,12 @@ router.post("/login", async (ctx) => {
       secretKey
     );
 
+    console.log("Generated token:", token);
+
+    if (!token) {
+      throw new Error("Failed to generate JWT token");
+    }
+
     // Store token with expiration (1 hour from now)
     const expiresAt = new Date(Date.now() + 3600000); // 1 hour
     await createToken(token, username, expiresAt);
@@ -136,6 +149,11 @@ router.post("/login", async (ctx) => {
       auth_token: token 
     };
   } catch (error) {
+    console.error("Login error details:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     ctx.response.status = 400;
     ctx.response.body = { error: "Invalid request data" };
   }
@@ -147,37 +165,53 @@ const is_authorized = async (auth_token: string) => {
     return false;
   }
 
-  const tokenInfo = await getTokenInfo(auth_token);
-  if (!tokenInfo) {
-    console.log("token not found");
-    return false;
-  }
-
   try {
+    // First verify the JWT token
     const payload = await verify(auth_token, secretKey);
-    if (payload.username === tokenInfo.username) {
-      return true;
+    
+    // Then check if the token exists in our database and is not expired
+    const tokenInfo = await getTokenInfo(auth_token);
+    if (!tokenInfo) {
+      console.log("token not found in database or expired");
+      return false;
     }
-  } catch {
-    console.log("token invalid");
+
+    // Verify the username matches
+    if (payload.username !== tokenInfo.username) {
+      console.log("token username mismatch");
+      await deleteToken(auth_token);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.log("token verification failed:", error);
+    // If token verification fails, clean up the token
     await deleteToken(auth_token);
     return false;
   }
-
-  console.log("incorrect token");
-  return false;
 };
 
 // Add a cleanup function to remove expired tokens periodically
 setInterval(async () => {
-  await cleanupExpiredTokens();
-}, 1000); // Check every second
+  try {
+    await cleanupExpiredTokens();
+  } catch (error) {
+    console.error("Error cleaning up expired tokens:", error);
+  }
+}, 60000); // Check every minute
 
 // Verify endpoint
 router.post("/verify", async (ctx) => {
   try {
     const body = await ctx.request.body.json();
     const { auth_token } = body;
+
+    if (!auth_token) {
+      ctx.response.status = 401;
+      ctx.response.body = { error: "No token provided" };
+      return;
+    }
 
     const isAuthorized = await is_authorized(auth_token);
     
@@ -190,6 +224,7 @@ router.post("/verify", async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = { message: "Token valid" };
   } catch (error) {
+    console.error("Verify error:", error);
     ctx.response.status = 400;
     ctx.response.body = { error: "Invalid request data" };
   }
@@ -215,6 +250,8 @@ router.post("/logout", async (ctx) => {
     const body = await ctx.request.body.json();
     const { auth_token } = body;
 
+    console.log("Logout attempt with token:", auth_token ? "present" : "missing");
+
     if (!auth_token) {
       ctx.response.status = 400;
       ctx.response.body = { error: "No token provided" };
@@ -222,16 +259,19 @@ router.post("/logout", async (ctx) => {
     }
 
     // Remove the token if it exists
-    const tokenInfo = await getTokenInfo(auth_token);
-    if (tokenInfo) {
+    try {
       await deleteToken(auth_token);
+      console.log("Token successfully deleted during logout");
       ctx.response.status = 200;
       ctx.response.body = { message: "Logout successful" };
-    } else {
-      ctx.response.status = 404;
-      ctx.response.body = { error: "Token not found" };
+    } catch (error) {
+      console.error("Error during token deletion:", error);
+      // Even if token deletion fails, we'll consider the logout successful
+      ctx.response.status = 200;
+      ctx.response.body = { message: "Logout successful" };
     }
   } catch (error) {
+    console.error("Logout error:", error);
     ctx.response.status = 400;
     ctx.response.body = { error: "Invalid request data" };
   }

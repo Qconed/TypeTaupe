@@ -73,10 +73,38 @@ async function incrementVictories(username: string) {
 
 // Token operations
 async function createToken(token: string, username: string, expiresAt: Date) {
-  db.execute(
-    "INSERT INTO tokens (token, username, expires_at) VALUES (?, ?, ?)",
-    [token, username, expiresAt.getTime()]
-  );
+  try {
+    console.log("Creating token:", {
+      token: token ? "present" : "missing",
+      username,
+      expiresAt: expiresAt.toISOString()
+    });
+
+    if (!token) {
+      throw new Error("Token cannot be null or undefined");
+    }
+
+    // Ensure token is a string and not empty
+    const tokenStr = String(token).trim();
+    if (!tokenStr) {
+      throw new Error("Token cannot be empty");
+    }
+
+    const result = db.query(
+      "INSERT INTO tokens (token, username, expires_at) VALUES (?, ?, ?)",
+      [tokenStr, username, expiresAt.getTime()]
+    );
+
+    console.log("Token created successfully");
+    return result;
+  } catch (error) {
+    console.error("Error creating token:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
 }
 
 async function getTokenInfo(token: string) {
@@ -93,6 +121,14 @@ async function getTokenInfo(token: string) {
   };
 }
 
+async function hasActiveToken(username: string) {
+  const result = db.query<[number]>(
+    "SELECT COUNT(*) FROM tokens WHERE username = ? AND expires_at > ?",
+    [username, Date.now()]
+  );
+  return result[0][0] > 0;
+}
+
 async function getAllActiveTokens() {
   const result = db.query<[number, string, string, number]>(
     "SELECT * FROM tokens WHERE expires_at > ?",
@@ -107,7 +143,36 @@ async function getAllActiveTokens() {
 }
 
 async function deleteToken(token: string) {
-  db.execute("DELETE FROM tokens WHERE token = ?", [token]);
+  try {
+    console.log("Attempting to delete token:", token ? "present" : "missing");
+    
+    if (!token) {
+      throw new Error("Cannot delete null or undefined token");
+    }
+
+    // First check if token exists
+    const existingToken = await getTokenInfo(token);
+    if (!existingToken) {
+      console.log("Token not found in database");
+      return;
+    }
+
+    // Delete the token
+    const result = db.query(
+      "DELETE FROM tokens WHERE token = ?",
+      [token]
+    );
+
+    console.log("Token deletion result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error deleting token:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
 }
 
 async function cleanupExpiredTokens() {
@@ -123,6 +188,7 @@ export {
   incrementVictories,
   createToken,
   getTokenInfo,
+  hasActiveToken,
   getAllActiveTokens,
   deleteToken,
   cleanupExpiredTokens
