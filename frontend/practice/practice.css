@@ -25,32 +25,39 @@ body {
 
 .text-ribbon {
     width: 100%;
-    height: 60px;
-    overflow: hidden;
-    white-space: nowrap;
+    min-height: 60px;
     background-color: #f8f8f8;
     border: 1px solid #ddd;
     border-radius: 5px;
     margin-bottom: 1rem;
     position: relative;
+    padding: 1rem;
+    text-align: center;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 #text-content {
     display: inline-block;
-    padding: 1rem;
     font-size: 1.2rem;
     color: #888;
-    transition: transform 0.3s ease;
+    line-height: 1.5;
+    max-width: 100%;
+    word-wrap: break-word;
 }
 
-#text-content .correct {
+#text-content span {
+    margin: 0 0.5rem;
+    display: inline-block;
+}
+
+#text-content span span {
+    margin: 0;
+    display: inline;
+}
+
+#text-content span.correct {
     color: #000;
-}
-
-.input-area {
-    margin-bottom: 1rem;
-    width: 100%;
-    box-sizing: border-box;
 }
 
 #user-input {
@@ -60,12 +67,18 @@ body {
     border: 2px solid #ddd;
     border-radius: 5px;
     outline: none;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.2s ease;
     box-sizing: border-box;
 }
 
 #user-input.error {
     border-color: #f44336 !important;
+    animation: error-flash 0.2s ease;
+}
+
+@keyframes error-flash {
+    0% { border-color: #f44336; }
+    100% { border-color: #f44336; }
 }
 
 #user-input:focus:not(.error) {

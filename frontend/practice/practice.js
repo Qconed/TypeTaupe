@@ -3,6 +3,8 @@ let startTime = null;
 let currentText = '';
 let isTyping = false;
 let errorCount = 0;
+let currentWordIndex = 0;
+let wordsPerDisplay = 5; // Number of words to show at once
 let lastScrollPosition = 0;
 
 const textContent = document.getElementById('text-content');
@@ -84,13 +86,41 @@ function scrollText() {
 }
 
 function updateTextColors(inputText) {
-    const textArray = currentText.split('');
-    const inputArray = inputText.split('');
+    const words = currentText.split(' ');
+    const startIdx = currentWordIndex;
+    const endIdx = Math.min(startIdx + wordsPerDisplay, words.length);
+    const displayWords = words.slice(startIdx, endIdx);
     
-    textContent.innerHTML = textArray.map((char, index) => {
-        const isCorrect = index < inputArray.length && char === inputArray[index];
-        return `<span class="${isCorrect ? 'correct' : ''}">${char}</span>`;
-    }).join('');
+    let currentPos = 0;
+    textContent.innerHTML = displayWords.map(word => {
+        const wordSpan = document.createElement('span');
+        wordSpan.innerHTML = word.split('').map((char, charIndex) => {
+            const isCorrect = currentPos + charIndex < inputText.length;
+            return `<span class="${isCorrect ? 'correct' : ''}">${char}</span>`;
+        }).join('');
+        currentPos += word.length + 1; // +1 for the space
+        return wordSpan.outerHTML;
+    }).join(' ');
+}
+
+function updateTextDisplay() {
+    const words = currentText.split(' ');
+    const startIdx = currentWordIndex;
+    const endIdx = Math.min(startIdx + wordsPerDisplay, words.length);
+    const displayWords = words.slice(startIdx, endIdx);
+    textContent.innerHTML = displayWords.map(word => `<span>${word}</span>`).join(' ');
+}
+
+function flashError() {
+    userInput.classList.add('error');
+    setTimeout(() => userInput.classList.remove('error'), 200);
+}
+
+function getCurrentChunkText() {
+    const words = currentText.split(' ');
+    const startIdx = currentWordIndex;
+    const endIdx = Math.min(startIdx + wordsPerDisplay, words.length);
+    return words.slice(startIdx, endIdx).join(' ');
 }
 
 async function startNewPractice() {
@@ -100,16 +130,14 @@ async function startNewPractice() {
         return;
     }
     
-    textContent.innerHTML = currentText.split('').map(char => `<span>${char}</span>`).join('');
-    textContent.style.transform = 'translateX(0)';
+    currentWordIndex = 0;
+    updateTextDisplay();
     userInput.value = '';
-    userInput.classList.remove('error');
     startTime = null;
     isTyping = false;
     errorCount = 0;
     errorsDisplay.textContent = '0';
     speedDisplay.textContent = '0';
-    lastScrollPosition = 0;
 }
 
 userInput.addEventListener('input', (e) => {
@@ -119,27 +147,38 @@ userInput.addEventListener('input', (e) => {
     }
 
     const inputText = e.target.value;
+    const currentChunkText = getCurrentChunkText();
     
-    // Check for errors
-    const hasError = inputText.split('').some((char, index) => char !== currentText[index]);
+    // Check if current character is correct
+    const expectedChar = currentChunkText[inputText.length - 1];
+    const actualChar = inputText[inputText.length - 1];
     
-    if (hasError) {
+    if (expectedChar !== actualChar) {
+        // Revert to previous valid state
+        userInput.value = inputText.slice(0, -1);
+        flashError();
         errorCount++;
         errorsDisplay.textContent = errorCount;
-        textContent.style.transform = `translateX(-${lastScrollPosition}px)`;
-        userInput.classList.add('error');
-    } else {
-        updateTextColors(inputText);
-        scrollText();
-        userInput.classList.remove('error');
+        return;
     }
 
-    if (inputText === currentText) {
+    // Update the colors of correctly typed characters
+    updateTextColors(inputText);
+
+    // Check if we've completed all words
+    if (currentWordIndex + wordsPerDisplay >= currentText.split(' ').length && 
+        inputText === currentChunkText) {
         const timeElapsed = (Date.now() - startTime) / 1000;
         const wpm = calculateWPM(timeElapsed, currentText.length);
         alert(`Congratulations! Your typing speed: ${wpm} WPM\nErrors: ${errorCount}`);
         currentLine++;
         startNewPractice();
+    }
+    // Check if we've completed current chunk and should move to next
+    else if (inputText === currentChunkText) {
+        currentWordIndex += wordsPerDisplay;
+        updateTextDisplay();
+        userInput.value = '';
     }
 
     updateSpeed();
