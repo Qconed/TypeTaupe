@@ -267,5 +267,31 @@ router.post("/logout", async (ctx) => {
   }
 });
 
+// Get text line endpoint
+router.get("/get/textline/:lineNumber", async (ctx) => {
+    try {
+        const lineNumber = parseInt(ctx.params.lineNumber);
+        if (isNaN(lineNumber) || lineNumber < 0) {
+            ctx.response.status = 400;
+            ctx.response.body = { error: "Invalid line number" };
+            return;
+        }
+
+        const lines = (await Deno.readTextFile('./lines.txt')).split('\n').filter(line => line.trim());
+        
+        if (lineNumber >= lines.length) {
+            ctx.response.status = 404;
+            ctx.response.body = { error: "Line number out of range" };
+            return;
+        }
+
+        ctx.response.status = 200;
+        ctx.response.body = { text: lines[lineNumber] };
+    } catch (error) {
+        ctx.response.status = 500;
+        ctx.response.body = { error: "Internal server error" };
+    }
+});
+
 console.log(`Server running on http://localhost:${port}`);
 await app.listen({ port });

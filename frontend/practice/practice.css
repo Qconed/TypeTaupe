@@ -1,0 +1,80 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+}
+
+.practice-container {
+    width: 80%;
+    max-width: 800px;
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.text-ribbon {
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+    white-space: nowrap;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+#text-content {
+    display: inline-block;
+    padding: 1rem;
+    font-size: 1.2rem;
+    color: #888;
+    transition: transform 0.3s ease;
+}
+
+#text-content .correct {
+    color: #000;
+}
+
+.input-area {
+    margin-bottom: 1rem;
+}
+
+#user-input {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+#user-input:focus {
+    border-color: #4CAF50;
+}
+
+.stats {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1rem;
+}
+
+#speed {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+#errors {
+    font-weight: bold;
+    color: #f44336;
+} 
