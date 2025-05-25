@@ -56,6 +56,13 @@ router.post("/register", async (ctx) => {
     const body = await ctx.request.body.json();
     const { username, password } = body;
 
+    // Check for empty username or password
+    if (!username || !password || username.trim() === "" || password.trim() === "") {
+      ctx.response.status = 400;
+      ctx.response.body = { error: "Username and password cannot be empty" };
+      return;
+    }
+
     // Check if username already exists
     if (users.some((u) => u.username === username)) {
       ctx.response.status = 409; // Conflict
@@ -89,11 +96,28 @@ router.post("/login", async (ctx) => {
     const body = await ctx.request.body.json();
     const { username, password } = body;
 
+    // Check for empty username or password
+    if (!username || !password || username.trim() === "" || password.trim() === "") {
+      ctx.response.status = 400;
+      ctx.response.body = { error: "Username and password cannot be empty" };
+      return;
+    }
+
     // Find user
     const user = users.find((u) => u.username === username);
     if (!user) {
       ctx.response.status = 401;
       ctx.response.body = { error: "Invalid username or password" };
+      return;
+    }
+
+    // Check if user is already logged in
+    const isAlreadyLoggedIn = Object.values(tokens).some(
+      (tokenInfo) => tokenInfo.username === username && Date.now() <= tokenInfo.expiresAt
+    );
+    if (isAlreadyLoggedIn) {
+      ctx.response.status = 409; // Conflict
+      ctx.response.body = { error: "User is already logged in" };
       return;
     }
 
