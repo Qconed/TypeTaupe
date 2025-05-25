@@ -12,7 +12,7 @@ echo "🚀 Starting servers..."
 
 # Start backend
 echo "Starting backend server on port $BACKEND_PORT..."
-(cd backend && deno run --allow-net --allow-read=../ main.ts $BACKEND_PORT) &
+(cd backend && deno run --allow-net --allow-read --allow-write --allow-env main.ts $BACKEND_PORT) &
 BACKEND_PID=$!
 
 # Start frontend  

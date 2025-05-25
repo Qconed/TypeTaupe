@@ -2,6 +2,17 @@ import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { create, verify } from "https://deno.land/x/djwt/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
+import {
+  initializeDatabase,
+  createUser,
+  getUserByUsername,
+  incrementVictories,
+  createToken,
+  getTokenInfo,
+  getAllActiveTokens,
+  deleteToken,
+  cleanupExpiredTokens
+} from "./db.ts";
 
 if (Deno.args.length < 1) {
   console.error("Usage: deno run --allow-net main.ts PORT");
@@ -10,15 +21,8 @@ if (Deno.args.length < 1) {
 
 const port = Number(Deno.args[0]);
 
-// In-memory user storage
-interface User {
-  id: number;
-  username: string;
-  password_hash: string; // This will store the hashed password
-}
-
-const users: User[] = [];
-let nextUserId = 0;
+// Initialize database
+await initializeDatabase();
 
 const router = new Router();
 
@@ -27,13 +31,6 @@ const secretKey = await crypto.subtle.generateKey(
   true,
   ["sign", "verify"]
 );
-
-interface TokenInfo {
-  username: string;
-  expiresAt: number;
-}
-
-const tokens: { [key: string]: TokenInfo } = {};
 
 // Read configuration
 const config = JSON.parse(await Deno.readTextFile('../config.json'));
@@ -64,7 +61,8 @@ router.post("/register", async (ctx) => {
     }
 
     // Check if username already exists
-    if (users.some((u) => u.username === username)) {
+    const existingUser = await getUserByUsername(username);
+    if (existingUser) {
       ctx.response.status = 409; // Conflict
       ctx.response.body = { error: "Username already exists" };
       return;
@@ -74,13 +72,7 @@ router.post("/register", async (ctx) => {
     const password_hash = await bcrypt.hash(password);
 
     // Create new user
-    const newUser: User = {
-      id: nextUserId++,
-      username,
-      password_hash,
-    };
-
-    users.push(newUser);
+    await createUser(username, password_hash);
 
     ctx.response.status = 201; // Created
     ctx.response.body = { message: "User registered successfully" };
@@ -104,7 +96,7 @@ router.post("/login", async (ctx) => {
     }
 
     // Find user
-    const user = users.find((u) => u.username === username);
+    const user = await getUserByUsername(username);
     if (!user) {
       ctx.response.status = 401;
       ctx.response.body = { error: "Invalid username or password" };
@@ -112,10 +104,8 @@ router.post("/login", async (ctx) => {
     }
 
     // Check if user is already logged in
-    const isAlreadyLoggedIn = Object.values(tokens).some(
-      (tokenInfo) => tokenInfo.username === username && Date.now() <= tokenInfo.expiresAt
-    );
-    if (isAlreadyLoggedIn) {
+    const existingToken = await getTokenInfo(username);
+    if (existingToken) {
       ctx.response.status = 409; // Conflict
       ctx.response.body = { error: "User is already logged in" };
       return;
@@ -137,11 +127,8 @@ router.post("/login", async (ctx) => {
     );
 
     // Store token with expiration (1 hour from now)
-    const expiresAt = Date.now() + 3600000; // 1 hour
-    tokens[token] = {
-      username: user.username,
-      expiresAt: expiresAt
-    };
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+    await createToken(token, username, expiresAt);
 
     ctx.response.status = 200;
     ctx.response.body = { 
@@ -160,16 +147,9 @@ const is_authorized = async (auth_token: string) => {
     return false;
   }
 
-  const tokenInfo = tokens[auth_token];
+  const tokenInfo = await getTokenInfo(auth_token);
   if (!tokenInfo) {
     console.log("token not found");
-    return false;
-  }
-
-  // Check if token has expired
-  if (Date.now() > tokenInfo.expiresAt) {
-    console.log("token expired");
-    delete tokens[auth_token]; // Remove expired token
     return false;
   }
 
@@ -180,7 +160,7 @@ const is_authorized = async (auth_token: string) => {
     }
   } catch {
     console.log("token invalid");
-    delete tokens[auth_token]; // Remove invalid token
+    await deleteToken(auth_token);
     return false;
   }
 
@@ -189,13 +169,8 @@ const is_authorized = async (auth_token: string) => {
 };
 
 // Add a cleanup function to remove expired tokens periodically
-setInterval(() => {
-  const now = Date.now();
-  Object.entries(tokens).forEach(([token, info]) => {
-    if (now > info.expiresAt) {
-      delete tokens[token];
-    }
-  });
+setInterval(async () => {
+  await cleanupExpiredTokens();
 }, 1000); // Check every second
 
 // Verify endpoint
@@ -223,15 +198,9 @@ router.post("/verify", async (ctx) => {
 // Get connected users endpoint
 router.get("/get/connected-users", async (ctx) => {
   try {
-    const now = Date.now();
-    // Filter out expired tokens and get unique usernames
-    const activeUsers = new Set(
-      Object.entries(tokens)
-        .filter(([_, info]) => now <= info.expiresAt)
-        .map(([_, info]) => info.username)
-    );
+    const activeTokens = await getAllActiveTokens();
+    const usersList = activeTokens.map(token => ({ name: token.username }));
     
-    const usersList = Array.from(activeUsers).map(username => ({ name: username }));
     ctx.response.status = 200;
     ctx.response.body = { users: usersList };
   } catch (error) {
@@ -253,8 +222,9 @@ router.post("/logout", async (ctx) => {
     }
 
     // Remove the token if it exists
-    if (tokens[auth_token]) {
-      delete tokens[auth_token];
+    const tokenInfo = await getTokenInfo(auth_token);
+    if (tokenInfo) {
+      await deleteToken(auth_token);
       ctx.response.status = 200;
       ctx.response.body = { message: "Logout successful" };
     } else {
@@ -327,7 +297,8 @@ app.use(async (ctx) => {
             return;
         }
 
-        const username = tokens[auth_token].username;
+        const tokenInfo = await getTokenInfo(auth_token);
+        const username = tokenInfo.username;
         let currentRoom: ChallengeRoom | null = null;
 
         // Find an available room or create a new one
@@ -391,6 +362,9 @@ app.use(async (ctx) => {
                         break;
 
                     case "complete":
+                        // Increment victories for the winner
+                        await incrementVictories(username);
+                        
                         // Notify all players that the game is over
                         for (const [playerName, playerWs] of currentRoom!.players.entries()) {
                             playerWs.send(JSON.stringify({
