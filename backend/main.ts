@@ -334,6 +334,19 @@ router.get("/get/textline/:lineNumber", async (ctx) => {
     }
 });
 
+// Get random text line endpoint
+router.get("/get/random-textline", async (ctx) => {
+    try {
+        const randomLine = await getRandomTextLine();
+        ctx.response.status = 200;
+        ctx.response.body = { text: randomLine };
+    } catch (error) {
+        console.error("Error getting random text line:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { error: "Internal server error" };
+    }
+});
+
 // WebSocket challenge rooms
 interface ChallengeRoom {
     players: Map<string, WebSocket>;
@@ -347,16 +360,29 @@ const challengeRooms = new Map<string, ChallengeRoom>();
 async function getRandomTextLine(): Promise<string> {
     const lines = await Deno.readTextFile("./lines.txt");
     const textLines = lines.split("\n").filter(line => line.trim());
-    const randomIndex = Math.floor(Math.random() * textLines.length);
-    return textLines[randomIndex];
+    
+    // Add additional entropy using current timestamp
+    const timestamp = Date.now();
+    const randomSeed = (timestamp % 10000) / 10000;
+    
+    // Combine multiple random sources for better distribution
+    const randomValue = (Math.random() + randomSeed) / 2;
+    const randomIndex = Math.floor(randomValue * textLines.length);
+    
+    // Ensure the index is within bounds (just in case)
+    const safeIndex = Math.max(0, Math.min(randomIndex, textLines.length - 1));
+    
+    console.log(`Random text selection - Index: ${safeIndex}, Total lines: ${textLines.length}`);
+    return textLines[safeIndex];
 }
 
 // WebSocket handler for challenges
 app.use(async (ctx) => {
     if (ctx.request.url.pathname === "/ws/challenge") {
-        const ws = await ctx.upgrade();
+        const ws = await ctx.upgrade(); //upgrade from simple http connection to websocket connection
         const auth_token = ctx.request.url.searchParams.get("auth_token");
         
+        //auth token checks
         if (!auth_token) {
             ws.close(1008, "No auth token provided");
             return;
@@ -372,6 +398,7 @@ app.use(async (ctx) => {
         const username = tokenInfo.username;
         let currentRoom: ChallengeRoom | null = null;
 
+        // matchmaking
         // Find an available room or create a new one
         for (const [roomId, room] of challengeRooms.entries()) {
             if (room.players.size < 2 && !room.isGameStarted) {

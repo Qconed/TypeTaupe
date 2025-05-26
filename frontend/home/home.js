@@ -2,6 +2,35 @@
 const MAX_DISPLAYED_USERS = 20;
 
 /**
+ * Displays the welcome message with username
+ */
+function displayWelcomeMessage() {
+    const username = localStorage.getItem('username');
+    if (username) {
+        const welcomeContainer = document.createElement('h2');
+        welcomeContainer.id = 'welcome-username';
+        welcomeContainer.textContent = `Hello, ${username}!`;
+        welcomeContainer.style.textAlign = 'center';
+        welcomeContainer.style.margin = '0 0 2rem 0';
+        welcomeContainer.style.color = '#4285f4';
+        welcomeContainer.style.fontWeight = '500';
+        welcomeContainer.style.fontSize = '1.8rem';
+        welcomeContainer.style.fontStyle = 'italic';
+        welcomeContainer.style.textShadow = '0 1px 2px rgba(0,0,0,0.2)';
+        
+        // Insert after the h1 element
+        const h1Element = document.querySelector('h1');
+        if (h1Element && h1Element.parentNode) {
+            if (h1Element.nextSibling) {
+                h1Element.parentNode.insertBefore(welcomeContainer, h1Element.nextSibling);
+            } else {
+                h1Element.parentNode.appendChild(welcomeContainer);
+            }
+        }
+    }
+}
+
+/**
  * Fetches and displays the list of currently connected users
  * @param {number} maxUsers - Maximum number of users to display in the list (default: MAX_DISPLAYED_USERS)
  */
@@ -104,8 +133,9 @@ async function addAdminFeatures() {
 // Initialize page
 async function initializePage() {
     await checkAuth();
+    displayWelcomeMessage();
     await addAdminFeatures();
 }
 
 // Start initialization when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializePage); 
+document.addEventListener('DOMContentLoaded', initializePage);

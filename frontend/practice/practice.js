@@ -1,4 +1,3 @@
-let currentLine = 0;
 let startTime = null;
 let currentText = '';
 let isTyping = false;
@@ -51,15 +50,15 @@ function highlightKey(key) {
     }
 }
 
-async function fetchTextLine(lineNumber) {
+async function fetchRandomTextLine() {
     try {
         const backendUrl = await window.config.getBackendUrl();
-        const response = await fetch(`${backendUrl}/get/textline/${lineNumber}`);
+        const response = await fetch(`${backendUrl}/get/random-textline`);
         if (!response.ok) throw new Error('Failed to fetch text line');
         const data = await response.json();
         return data.text;
     } catch (error) {
-        console.error('Error fetching text line:', error);
+        console.error('Error fetching random text line:', error);
         return null;
     }
 }
@@ -124,7 +123,7 @@ function getCurrentChunkText() {
 }
 
 async function startNewPractice() {
-    currentText = await fetchTextLine(currentLine);
+    currentText = await fetchRandomTextLine();
     if (!currentText) {
         alert('Error loading text. Please try again.');
         return;
@@ -171,7 +170,6 @@ userInput.addEventListener('input', (e) => {
         const timeElapsed = (Date.now() - startTime) / 1000;
         const wpm = calculateWPM(timeElapsed, currentText.length);
         alert(`Congratulations! Your typing speed: ${wpm} WPM\nErrors: ${errorCount}`);
-        currentLine++;
         startNewPractice();
     }
     // Check if we've completed current chunk and should move to next
@@ -229,4 +227,4 @@ async function initializePractice() {
 }
 
 // Start initialization
-initializePractice(); 
+initializePractice();

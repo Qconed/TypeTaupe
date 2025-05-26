@@ -247,6 +247,7 @@ userInput.addEventListener('input', (e) => {
         updatePlayerProgress(1);
         
         // Send completion to server
+        // (will tell others we won)
         ws.send(JSON.stringify({
             type: 'complete',
             wpm: wpm,
