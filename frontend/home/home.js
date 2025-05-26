@@ -6,6 +6,7 @@ const MAX_DISPLAYED_USERS = 20;
  */
 function displayWelcomeMessage() {
     const username = sessionStorage.getItem('username');
+    console.log('Username from sessionStorage:', username);
     if (username) {
         const welcomeContainer = document.createElement('h2');
         welcomeContainer.id = 'welcome-username';
@@ -27,6 +28,8 @@ function displayWelcomeMessage() {
                 h1Element.parentNode.appendChild(welcomeContainer);
             }
         }
+    } else {
+        console.error('No username found in sessionStorage');
     }
 }
 
@@ -49,7 +52,7 @@ async function displayConnectedUsers(maxUsers = MAX_DISPLAYED_USERS) {
         // Get the container element where we'll display the users
         const container = document.getElementById('connected-users-container');
         if (!container) {
-            console.error('Container element not found');
+            console.error('Connected users container element not found');
             return;
         }
         
@@ -58,40 +61,41 @@ async function displayConnectedUsers(maxUsers = MAX_DISPLAYED_USERS) {
         
         // Display total number of users
         const totalUsersElement = document.createElement('p');
-        totalUsersElement.textContent = `Currrently online: ${totalUsers}`;
+        totalUsersElement.textContent = `Currently online: ${totalUsers}`;
         container.appendChild(totalUsersElement);
         
         // Display list of users (limited to maxUsers)
-        const userList = document.createElement('ul');
-        users.slice(0, maxUsers).forEach(user => {
-            const listItem = document.createElement('li');
-            listItem.textContent = user.name;
-            userList.appendChild(listItem);
-        });
-        
-        container.appendChild(userList);
-        
-        // If there are more users than the display limit, show a message
-        if (totalUsers > maxUsers) {
-            const remainingUsers = document.createElement('p');
-            remainingUsers.textContent = `... and ${totalUsers - maxUsers} more`;
-            container.appendChild(remainingUsers);
+        if (users.length > 0) {
+            const userList = document.createElement('ul');
+            users.slice(0, maxUsers).forEach(user => {
+                const listItem = document.createElement('li');
+                listItem.textContent = user.name;
+                userList.appendChild(listItem);
+            });
+            
+            container.appendChild(userList);
+            
+            // If there are more users than the display limit, show a message
+            if (totalUsers > maxUsers) {
+                const remainingUsers = document.createElement('p');
+                remainingUsers.textContent = `... and ${totalUsers - maxUsers} more`;
+                container.appendChild(remainingUsers);
+            }
+        } else {
+            const noUsersElement = document.createElement('p');
+            noUsersElement.textContent = 'No users currently online';
+            container.appendChild(noUsersElement);
         }
     } catch (error) {
         console.error('Error fetching connected users:', error);
+        
+        // Show error message in the container
+        const container = document.getElementById('connected-users-container');
+        if (container) {
+            container.innerHTML = '<p>Failed to load connected users</p>';
+        }
     }
 }
-
-// Call the function when the page loads and then every X seconds
-document.addEventListener('DOMContentLoaded', () => {
-    // Initial call
-    displayConnectedUsers();
-    
-    // Set up interval for subsequent calls
-    setInterval(() => {
-        displayConnectedUsers();
-    }, 2000); // in milliseconds
-});
 
 // Check if user is admin
 async function checkIfAdmin() {
@@ -120,10 +124,10 @@ async function addAdminFeatures() {
         const adminLink = document.createElement('a');
         adminLink.href = '/addtext/index.html';
         adminLink.className = 'admin-link';
-        adminLink.textContent = 'Manage Practice Text';
+        // adminLink.textContent = 'Manage Practice Text';
         
         // Add the link to the appropriate container
-        const container = document.querySelector('.container');
+        const container = document.querySelector('.main-content');
         if (container) {
             container.appendChild(adminLink);
         }
@@ -132,10 +136,31 @@ async function addAdminFeatures() {
 
 // Initialize page
 async function initializePage() {
-    await checkAuth();
-    displayWelcomeMessage();
-    await addAdminFeatures();
+    try {
+        // First check if authenticated
+        await window.checkAuth();
+        console.log('Authentication check passed');
+        
+        // Initialize user interface elements
+        displayWelcomeMessage();
+        await displayConnectedUsers();
+        await addAdminFeatures();
+        
+        // Set up interval for updating connected users
+        setInterval(() => {
+            displayConnectedUsers();
+        }, 5000); // Update every 5 seconds
+        
+        console.log('Home page initialized successfully');
+    } catch (error) {
+        console.error('Error initializing page:', error);
+    }
 }
 
-// Start initialization when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializePage);
+// Make sure DOM is loaded before initializing
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializePage);
+} else {
+    // DOM already loaded, initialize directly
+    initializePage();
+}

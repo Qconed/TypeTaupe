@@ -1,22 +1,25 @@
-Bien joué à tous pour le projet web
 Python JavaScript Java C++ Ruby Swift Go
 Lion Tiger Elephant Giraffe Zebra
  Kangaroo Panda Koala Wolf
 Fox Dolphin Eagle Owl Penguin Rhino
- PHP Rust Kotlin TypeScript R Perl Haskell SQL
-Carrot Broccoli Spinach 
+PHP Rust Kotlin TypeScript R Perl Haskell SQL
+Carrot Broccoli Spinach
 Tomato Cucumber Potato Onion
-Pepper Lettuce Eggplant 
+Pepper Lettuce Eggplant
 Zucchini Pumpkin Radish Celery Beet
-Mario Zelda Fortnite Minecraft 
+Mario Zelda Fortnite Minecraft
 Call of Duty Grand Theft Auto
 Pokémon Halo Skyrim Tetris
 Great Pyramid of Giza Hanging Gardens of Babylon
-Statue of Zeus Temple of Artemis 
-Mausoleum at Halicarnassus 
+Statue of Zeus Temple of Artemis
+Mausoleum at Halicarnassus
 Colossus of Rhodes
 Lighthouse of Alexandria
-American Canadian Japanese Australian Brazilian German Indian Italian Mexican South African
-Jean Marie Pierre Sophie Louis Camille Luc Amélie François Elise
-To Kill a Mockingbird 1984 The Great Gatsby Pride and Prejudice The Catcher in the Rye The Hobbit Moby Dick War and Peace The Odyssey Crime and Punishment
+American Canadian Japanese Australian
+Brazilian German Indian Italian
+Mexican South African
+Jean Marie Pierre Sophie
+Louis Camille Luc Amélie François Elise
+To Kill a Mockingbird 1984 The Great Gatsby 
+Pride and Prejudice The Catcher in the Rye The Hobbit Moby Dick War and Peace The Odyssey Crime and Punishment
 Soccer Basketball Tennis Swimming Athletics Cycling Golf Baseball Rugby Volleyball
