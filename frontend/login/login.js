@@ -30,9 +30,9 @@ const handleLogin = async () => {
 
         const data = await handleResponse(response);
         
-        // Store token in localStorage
-        localStorage.setItem('auth_token', data.auth_token);
-        localStorage.setItem('username', usernameInput.value);
+        // Store token in sessionStorage instead of localStorage
+        sessionStorage.setItem('auth_token', data.auth_token);
+        sessionStorage.setItem('username', usernameInput.value);
         
         // Redirect to home page
         window.location.href = '/home/index.html';

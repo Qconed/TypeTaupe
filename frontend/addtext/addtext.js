@@ -1,6 +1,6 @@
 // Check if user is admin and authorized
 async function checkAdminAuth() {
-    const auth_token = localStorage.getItem('auth_token');
+    const auth_token = sessionStorage.getItem('auth_token');
     if (!auth_token) {
         window.location.href = '/login/index.html';
         return false;
@@ -17,9 +17,9 @@ async function checkAdminAuth() {
         });
 
         if (!response.ok) {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('username');
-            localStorage.removeItem('last_login');
+            sessionStorage.removeItem('auth_token');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('last_login');
             window.location.href = '/login/index.html';
             return false;
         }
@@ -47,7 +47,7 @@ async function checkAdminAuth() {
 // Load all text lines
 async function loadTextLines() {
     try {
-        const auth_token = localStorage.getItem('auth_token');
+        const auth_token = sessionStorage.getItem('auth_token');
         const backendUrl = await window.config.getBackendUrl();
         const response = await fetch(`${backendUrl}/admin/textlines`, {
             headers: {
@@ -94,7 +94,7 @@ async function handleAddText() {
     }
 
     try {
-        const auth_token = localStorage.getItem('auth_token');
+        const auth_token = sessionStorage.getItem('auth_token');
         const backendUrl = await window.config.getBackendUrl();
         const response = await fetch(`${backendUrl}/admin/textlines`, {
             method: 'POST',
@@ -122,7 +122,7 @@ async function handleDelete(event) {
     const index = event.target.dataset.index;
     
     try {
-        const auth_token = localStorage.getItem('auth_token');
+        const auth_token = sessionStorage.getItem('auth_token');
         const backendUrl = await window.config.getBackendUrl();
         const response = await fetch(`${backendUrl}/admin/textlines/${index}`, {
             method: 'DELETE',
@@ -153,4 +153,4 @@ async function initializePage() {
 }
 
 // Start initialization when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializePage); 
+document.addEventListener('DOMContentLoaded', initializePage);

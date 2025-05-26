@@ -1,7 +1,7 @@
 // Function to check if user is authorized
 const checkAuth = async () => {
-    const auth_token = localStorage.getItem('auth_token');
-    const last_login = localStorage.getItem('last_login');
+    const auth_token = sessionStorage.getItem('auth_token');
+    const last_login = sessionStorage.getItem('last_login');
     
     try {
         const backendUrl = await window.config.getBackendUrl();
@@ -21,9 +21,9 @@ const checkAuth = async () => {
         return true;
     } catch (error) {
         // Clear invalid token
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('last_login');
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('last_login');
         
         // Show error message to user
         alert(error.message);
@@ -53,9 +53,9 @@ const handleLogin = async (username, password) => {
         }
 
         // Store auth token and last login timestamp
-        localStorage.setItem('auth_token', data.auth_token);
-        localStorage.setItem('username', username);
-        localStorage.setItem('last_login', data.last_login);
+        sessionStorage.setItem('auth_token', data.auth_token);
+        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('last_login', data.last_login);
 
         // Redirect to game page
         window.location.href = '/game/index.html';
@@ -67,7 +67,7 @@ const handleLogin = async (username, password) => {
 // Function to handle logout
 window.handleLogout = async () => {
     try {
-        const auth_token = localStorage.getItem('auth_token');
+        const auth_token = sessionStorage.getItem('auth_token');
         console.log("Attempting logout with token:", auth_token ? "present" : "missing");
 
         if (auth_token) {
@@ -92,10 +92,10 @@ window.handleLogout = async () => {
         alert('Error during logout: ' + error.message);
     } finally {
         // Clear all auth data
-        console.log("Clearing auth data from localStorage");
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('last_login');
+        console.log("Clearing auth data from sessionStorage");
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('last_login');
         
         // Redirect to login page
         window.location.href = '/login/index.html';
@@ -111,4 +111,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export functions for use in other scripts
 window.checkAuth = checkAuth;
-window.handleLogin = handleLogin; 
+window.handleLogin = handleLogin;

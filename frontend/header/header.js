@@ -1,7 +1,7 @@
 async function handleLogout() {
     alert("logout");
     try {
-        const auth_token = localStorage.getItem('auth_token');
+        const auth_token = sessionStorage.getItem('auth_token');
         if (!auth_token) {
             console.error('No auth token found');
             return;
@@ -20,9 +20,9 @@ async function handleLogout() {
             throw new Error('Logout failed');
         }
 
-        // Clear local storage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('username');
+        // Clear session storage
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('username');
 
         // Redirect to index page
         window.location.href = '/';

@@ -191,7 +191,7 @@ document.addEventListener('keydown', (e) => {
 async function initializePractice() {
     try {
         // Check if user is authorized
-        const auth_token = localStorage.getItem('auth_token');
+        const auth_token = sessionStorage.getItem('auth_token');
         if (!auth_token) {
             window.location.href = '/login/index.html';
             return;
@@ -209,9 +209,9 @@ async function initializePractice() {
 
         if (!response.ok) {
             // If token is invalid, redirect to login
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('username');
-            localStorage.removeItem('last_login');
+            sessionStorage.removeItem('auth_token');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('last_login');
             window.location.href = '/login/index.html';
             return;
         }

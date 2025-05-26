@@ -5,7 +5,7 @@ const MAX_DISPLAYED_USERS = 20;
  * Displays the welcome message with username
  */
 function displayWelcomeMessage() {
-    const username = localStorage.getItem('username');
+    const username = sessionStorage.getItem('username');
     if (username) {
         const welcomeContainer = document.createElement('h2');
         welcomeContainer.id = 'welcome-username';
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Check if user is admin
 async function checkIfAdmin() {
-    const auth_token = localStorage.getItem('auth_token');
+    const auth_token = sessionStorage.getItem('auth_token');
     if (!auth_token) return false;
 
     try {

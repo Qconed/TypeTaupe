@@ -30,7 +30,7 @@ const keyboardLayout = [
 // Initialize WebSocket connection
 async function initializeWebSocket() {
     const backendUrl = await window.config.getBackendUrl();
-    const auth_token = localStorage.getItem('auth_token');
+    const auth_token = sessionStorage.getItem('auth_token');
     const wsUrl = backendUrl.replace('http', 'ws') + `/ws/challenge?auth_token=${auth_token}`;
     ws = new WebSocket(wsUrl);
 
@@ -100,7 +100,7 @@ function handleGameOver(data) {
     isGameFinished = true;
     userInput.disabled = true;
     
-    if (data.winner === localStorage.getItem('username')) {
+    if (data.winner === sessionStorage.getItem('username')) {
         alert('Congratulations! You won the challenge!');
     } else {
         alert('Game Over! Your opponent finished first.');
