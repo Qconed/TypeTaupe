@@ -3,16 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>TypeTaupe - Home</title>
     <link rel="icon" type="image/ico" href="../public/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-image: url('../public/taupe.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            color: white;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        #header-container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            text-align: center;
+            margin: 2rem 0;
+            background: linear-gradient(45deg, #1a73e8, #4285f4, #34a853);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #4285f4;
+            box-shadow: 0 8px 32px rgba(66, 133, 244, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #1a73e8, #4285f4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-description {
+            font-size: 1rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        #connected-users-container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .feature-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="header-container"></div>
-    <h1>Home</h1>
-    <a href="../practice/practice.html">Practice</a>
-    <a href="../challenge/challenge.html">Challenge</a>
-    <a href="../addtext/addtext.html">Admin</a>
-    <div id="connected-users-container"></div>
+    <div class="main-content">
+        <h1>Welcome to TypeTaupe</h1>
+        <div class="features-grid">
+            <a href="../practice/practice.html" class="feature-card">
+                <i class="fas fa-keyboard feature-icon"></i>
+                <div class="feature-title">Practice Mode</div>
+                <div class="feature-description">Improve your typing skills with guided exercises and real-time feedback</div>
+            </a>
+            <a href="../challenge/challenge.html" class="feature-card">
+                <i class="fas fa-trophy feature-icon"></i>
+                <div class="feature-title">Challenge Mode</div>
+                <div class="feature-description">Test your skills against others and climb the leaderboard</div>
+            </a>
+            <a href="../addtext/addtext.html" class="feature-card">
+                <i class="fas fa-user-shield feature-icon"></i>
+                <div class="feature-title">Admin Panel</div>
+                <div class="feature-description">Manage content and monitor user progress</div>
+            </a>
+        </div>
+        <div id="connected-users-container"></div>
+    </div>
+
     <script src="../config.js"></script>
     <script src="../auth.js"></script>
     <script src="../header/loadHeader.js"></script>
