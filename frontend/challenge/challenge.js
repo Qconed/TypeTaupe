@@ -85,12 +85,14 @@ function handleWebSocketMessage(data) {
 }
 
 function updatePlayerProgress(progress) {
-    const percentage = Math.min(100, Math.round(progress * 100));
+    // Ensure progress is exactly 100% when completed
+    const percentage = progress >= 0.999 ? 100 : Math.min(100, Math.round(progress * 100));
     playerProgress.style.width = `${percentage}%`;
 }
 
 function updateOpponentProgress(progress) {
-    const percentage = Math.min(100, Math.round(progress * 100));
+    // Ensure progress is exactly 100% when completed
+    const percentage = progress >= 0.999 ? 100 : Math.min(100, Math.round(progress * 100));
     opponentProgress.style.width = `${percentage}%`;
 }
 
@@ -217,8 +219,16 @@ userInput.addEventListener('input', (e) => {
 
     updateTextColors(inputText);
 
-    // Calculate and update progress
-    const totalProgress = (currentWordIndex * wordsPerDisplay + inputText.length) / currentText.length;
+    // Calculate how many characters user has typed in total
+    const words = currentText.split(' ');
+    let charactersPassed = 0;
+    for (let i = 0; i < currentWordIndex; i++) {
+        charactersPassed += words[i].length + 1; // +1 for the space
+    }
+    charactersPassed += inputText.length;
+    
+    // Calculate and update progress - divide characters typed by total characters
+    const totalProgress = charactersPassed / currentText.length;
     updatePlayerProgress(totalProgress);
 
     // Send progress to server
@@ -228,10 +238,13 @@ userInput.addEventListener('input', (e) => {
     }));
 
     // Check if we've completed all words
-    if (currentWordIndex + wordsPerDisplay >= currentText.split(' ').length && 
+    if (currentWordIndex + wordsPerDisplay >= words.length && 
         inputText === currentChunkText) {
         const timeElapsed = (Date.now() - startTime) / 1000;
         const wpm = calculateWPM(timeElapsed, currentText.length);
+        
+        // Ensure progress is set to exactly 100% on completion
+        updatePlayerProgress(1);
         
         // Send completion to server
         ws.send(JSON.stringify({
@@ -257,4 +270,4 @@ document.addEventListener('keydown', (e) => {
 // Initialize
 userInput.disabled = true;
 createKeyboard();
-initializeWebSocket(); 
+initializeWebSocket();

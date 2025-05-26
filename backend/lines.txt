@@ -1,8 +1,12 @@
-Bonjour a tous les IG, ceci est une petite démo ;)
+Bonjour a tous les IG,
+ceci est une petite démo ;)
 Bien joué à tous pour le projet web
 Python JavaScript Java C++ Ruby Swift Go
-Lion Tiger Elephant Giraffe Zebra Kangaroo
-Panda Koala Wolf Fox Dolphin Eagle Owl Penguin Rhino
+Lion Tiger Elephant Giraffe Zebra
+ Kangaroo Panda Koala Wolf
+Fox Dolphin Eagle Owl Penguin Rhino
  PHP Rust Kotlin TypeScript R Perl Haskell SQL
-Carrot Broccoli Spinach Tomato Cucumber Potato Onion
-Pepper Lettuce Eggplant Zucchini Pumpkin Radish Celery Beet
+Carrot Broccoli Spinach 
+Tomato Cucumber Potato Onion
+Pepper Lettuce Eggplant 
+Zucchini Pumpkin Radish Celery Beet
