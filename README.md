@@ -22,6 +22,8 @@ Only the admin of the website can modify this list.
 Clone this repository on your PC. After, that run the dedicated start script:
 - `./start.sh`  using the Linux/MacOS/WSL terminal
 
+The website will now be running on [http://localhost:8080](http://localhost:8080).
+
 To stop the servers from running, simply kill the script with `Ctrl+C` in the terminal.
 
 # Project Info
