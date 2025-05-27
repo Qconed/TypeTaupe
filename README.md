@@ -1,17 +1,19 @@
+
 # TypeTaupe
+
+![taupe](./frontend/public/favicon.ico)
 
 Learn keyboard typing with a cute mole !
 
-
-![practice]()
+![practice](./screenshots/practice.png)
 
 TypeTaupe is a keyboard typing website, and uses a list of predefined words for the users to train on. 
 
-![challenge]()
+![challenge](./screenshots/challenge.png)
 
 The users can race each other in speed typing challenges, and a visual keyboard helps them visualize in real-time what their fingers are pressing.
 
-![wordslist]()
+![wordslist](./screenshots/addtext.png)
 
 Only the admin of the website can modify this list.
 
@@ -19,7 +21,6 @@ Only the admin of the website can modify this list.
 
 Clone this repository on your PC. After, that run the dedicated start script:
 - `./start.sh`  using the Linux/MacOS/WSL terminal
-- `./start.ps1` using Windows Powershell
 
 To stop the servers from running, simply kill the script with `Ctrl+C` in the terminal.
 
